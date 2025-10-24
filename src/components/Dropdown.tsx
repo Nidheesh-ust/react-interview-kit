@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface DropdownProps {
   label: string;
@@ -9,23 +9,70 @@ interface DropdownProps {
 export const Dropdown: React.FC<DropdownProps> = ({ label, options, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<string>("");
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1); // for keyboard nav
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  const handleToggle = () => setIsOpen(!isOpen);
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
+
+  const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+    const target = event.target;
+    if (wrapperRef.current && target instanceof Node && !wrapperRef.current.contains(target)) {
+      setIsOpen(false);
+      setHighlightedIndex(-1);
+    }
+  };
+
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen) setHighlightedIndex(0); // highlight first item when opening
+  };
 
   const handleSelect = (value: string) => {
     setSelected(value);
     onSelect(value);
     setIsOpen(false);
+    setHighlightedIndex(-1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter") setIsOpen(!isOpen);
-    if (e.key === "Escape") setIsOpen(false);
-    
+    if (!isOpen && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      setIsOpen(true);
+      setHighlightedIndex(0);
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev + 1) % options.length);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev - 1 + options.length) % options.length);
+        break;
+      case "Enter":
+        if (highlightedIndex >= 0 && highlightedIndex < options.length) {
+          handleSelect(options[highlightedIndex]);
+        } else {
+          setIsOpen(!isOpen);
+        }
+        break;
+      case "Escape":
+        setIsOpen(false);
+        setHighlightedIndex(-1);
+        break;
+    }
   };
 
   return (
-    <div className="dropdown">
+    <div className="dropdown" ref={wrapperRef}>
       <label className="dropdown-label">{label}</label>
 
       <div
@@ -55,13 +102,14 @@ export const Dropdown: React.FC<DropdownProps> = ({ label, options, onSelect }) 
             background: "#fff",
           }}
         >
-          {options.map((opt) => (
+          {options.map((opt, index) => (
             <li
               key={opt}
               onClick={() => handleSelect(opt)}
               style={{
                 padding: "8px",
                 cursor: "pointer",
+                background: highlightedIndex === index ? "#bde4ff" : "#fff", // highlight
               }}
             >
               {opt}

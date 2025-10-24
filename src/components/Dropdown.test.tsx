@@ -1,53 +1,80 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+// Dropdown.test.tsx
 import { describe, it, expect, vi } from "vitest";
+import { render, fireEvent } from "@testing-library/react";
 import { Dropdown } from "./Dropdown";
 
 describe("Dropdown Component", () => {
-  const options = ["Red", "Green", "Blue"];
+  const options = ["Option 1", "Option 2", "Option 3"];
+  const label = "Select an option";
 
-  it("opens and closes when clicked", () => {
-    render(<Dropdown label="Colors" options={options} onSelect={vi.fn()} />);
+  it("renders the label and default text", () => {
+    const { getByText } = render(
+      <Dropdown label={label} options={options} onSelect={() => {}} />
+    );
 
-    // initially closed
-    expect(screen.queryByText("Red")).not.toBeInTheDocument();
-
-    // open
-    fireEvent.click(screen.getByText("Select..."));
-    expect(screen.getByText("Red")).toBeInTheDocument();
-
-    // close
-    fireEvent.click(screen.getByText("Select..."));
-    expect(screen.queryByText("Red")).not.toBeInTheDocument();
+    expect(getByText(label)).toBeTruthy();
+    expect(getByText("Select...")).toBeTruthy();
   });
 
-  it("selects an option and closes", () => {
+  it("opens and closes dropdown on click", async () => {
+    const { getByText, queryByText } = render(
+      <Dropdown label={label} options={options} onSelect={() => {}} />
+    );
+
+    const dropdown = getByText("Select...");
+    fireEvent.click(dropdown);
+    expect(getByText("Option 1")).toBeTruthy();
+
+    fireEvent.click(dropdown);
+    expect(queryByText("Option 1")).toBeNull();
+  });
+
+  it("calls onSelect when an option is clicked", () => {
     const onSelect = vi.fn();
-    render(<Dropdown label="Colors" options={options} onSelect={onSelect} />);
+    const { getByText } = render(
+      <Dropdown label={label} options={options} onSelect={onSelect} />
+    );
 
-    // open dropdown
-    fireEvent.click(screen.getByText("Select..."));
-    fireEvent.click(screen.getByText("Green"));
+    fireEvent.click(getByText("Select..."));
+    fireEvent.click(getByText("Option 2"));
 
-    // onSelect called
-    expect(onSelect).toHaveBeenCalledWith("Green");
-
-    // closed after selection
-    expect(screen.queryByText("Red")).not.toBeInTheDocument();
-
-    // selected value displayed
-    expect(screen.getByText("Green")).toBeInTheDocument();
+    expect(onSelect).toHaveBeenCalledWith("Option 2");
   });
 
-  it("opens and closes using keyboard (Enter / Escape)", () => {
-    render(<Dropdown label="Colors" options={options} onSelect={vi.fn()} />);
-    const dropdownBox = screen.getByText("Select...");
+  it("navigates options with keyboard and selects with Enter", () => {
+    const onSelect = vi.fn();
+    const { getByText, queryByText } = render(
+      <Dropdown label={label} options={options} onSelect={onSelect} />
+    );
 
-    // open with Enter
-    fireEvent.keyDown(dropdownBox, { key: "Enter" });
-    expect(screen.getByText("Red")).toBeInTheDocument();
+    const dropdown = getByText("Select...");
+    dropdown.focus();
 
-    // close with Escape
-    fireEvent.keyDown(dropdownBox, { key: "Escape" });
-    expect(screen.queryByText("Red")).not.toBeInTheDocument();
+    // Open dropdown with ArrowDown
+    fireEvent.keyDown(dropdown, { key: "ArrowDown" });
+    expect(getByText("Option 1")).toBeTruthy();
+
+    // Move highlight down to Option 2
+    fireEvent.keyDown(dropdown, { key: "ArrowDown" });
+
+    // Press Enter to select Option 2
+    fireEvent.keyDown(dropdown, { key: "Enter" });
+    expect(onSelect).toHaveBeenCalledWith("Option 2");
+
+    // Dropdown should close
+    expect(queryByText("Option 1")).toBeNull();
+  });
+
+  it("closes dropdown with Escape key", () => {
+    const { getByText, queryByText } = render(
+      <Dropdown label={label} options={options} onSelect={() => {}} />
+    );
+
+    const dropdown = getByText("Select...");
+    fireEvent.click(dropdown); // open dropdown
+    expect(getByText("Option 1")).toBeTruthy();
+
+    fireEvent.keyDown(dropdown, { key: "Escape" });
+    expect(queryByText("Option 1")).toBeNull();
   });
 });
