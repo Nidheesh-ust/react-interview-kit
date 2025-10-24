@@ -1,4 +1,3 @@
-// Dropdown.test.tsx
 import { describe, it, expect, vi } from "vitest";
 import { render, fireEvent } from "@testing-library/react";
 import { Dropdown } from "./Dropdown";
@@ -9,7 +8,7 @@ describe("Dropdown Component", () => {
 
   it("renders the label and default text", () => {
     const { getByText } = render(
-      <Dropdown label={label} options={options} onSelect={() => {}} />
+      <Dropdown label={label} options={options} onSelect={() => { }} />
     );
 
     expect(getByText(label)).toBeTruthy();
@@ -18,7 +17,7 @@ describe("Dropdown Component", () => {
 
   it("opens and closes dropdown on click", async () => {
     const { getByText, queryByText } = render(
-      <Dropdown label={label} options={options} onSelect={() => {}} />
+      <Dropdown label={label} options={options} onSelect={() => { }} />
     );
 
     const dropdown = getByText("Select...");
@@ -67,7 +66,7 @@ describe("Dropdown Component", () => {
 
   it("closes dropdown with Escape key", () => {
     const { getByText, queryByText } = render(
-      <Dropdown label={label} options={options} onSelect={() => {}} />
+      <Dropdown label={label} options={options} onSelect={() => { }} />
     );
 
     const dropdown = getByText("Select...");
