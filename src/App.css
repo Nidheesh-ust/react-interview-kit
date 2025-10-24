@@ -4,3 +4,10 @@
   padding: 2rem;
   text-align: center;
 }
+.dropdown {
+   margin: 16px 0;
+}
+.dropdown-label {
+  display: block; 
+  margin-bottom: 4px
+}
